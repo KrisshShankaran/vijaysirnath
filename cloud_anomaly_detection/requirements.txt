@@ -1,0 +1,12 @@
+streamlit==1.31.1
+pandas==2.2.0
+numpy==1.26.3
+scikit-learn==1.4.0
+plotly==5.18.0
+tensorflow==2.15.0
+shap==0.43.0
+networkx==3.2.1
+matplotlib==3.8.2
+seaborn==0.13.2
+ctgan==0.7.0
+sdv==1.2.0 
