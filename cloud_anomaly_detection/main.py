@@ -162,15 +162,22 @@ def main():
             # Synthetic Data Generation Tab
             with tab2:
                 st.subheader("Synthetic Data Generation")
+                data_processor = DataProcessor()
                 ctgan = CTGANModule()
                 
                 if st.button("Generate Data"):
-                    with st.spinner("Generating..."):
-                        if ctgan.fit(data):
-                            synthetic_data = ctgan.generate_samples(len(data))
-                            if synthetic_data is not None:
-                                st.success("Synthetic data generated!")
-                                st.dataframe(synthetic_data.head(), use_container_width=True)
+                    with st.spinner("Processing and Generating..."):
+                        # First preprocess the data
+                        processed_data = data_processor.preprocess_data(data)
+                        if processed_data is not None:
+                            # Then fit CTGAN and generate synthetic data
+                            if ctgan.fit(processed_data):
+                                synthetic_data = ctgan.generate_samples(len(data))
+                                if synthetic_data is not None:
+                                    st.success("Synthetic data generated!")
+                                    st.dataframe(synthetic_data.head(), use_container_width=True)
+                        else:
+                            st.error("Error preprocessing data")
             
             # Anomaly Detection Tab
             with tab3:
@@ -268,7 +275,16 @@ def main():
                                 # Set done=True for the last iteration
                                 done = (i == 4)
                                 adaptive_rca.update_model(state, action, reward, next_state, done)
+                            
+                            # Display visualizations
+                            st.subheader("Q-Value Heatmap")
+                            adaptive_rca.visualize_q_values()
+                            
+                            st.subheader("Reward Progression")
                             adaptive_rca.visualize_reward_progression()
+                            
+                            st.subheader("Action Distribution")
+                            adaptive_rca.visualize_action_distribution()
                     
         except Exception as e:
             st.error(f"Error: {str(e)}")
