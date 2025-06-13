@@ -53,7 +53,3 @@ cloud-anomaly_detection/
 ├── ctgan_module.py        # Synthetic data generation
 └── requirements.txt       # Project dependencies
 ```
-
-## License
-
-MIT License 
