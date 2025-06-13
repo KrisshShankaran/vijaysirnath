@@ -116,23 +116,48 @@ class AdaptiveRCAOptimizer:
             print(f"Error updating model: {str(e)}")
             return False
     
-    def visualize_q_values(self, state):
-        """Visualize Q-values for different states"""
-        if not self.q_values_history:
-            print("No Q-values available. Please run select_action first.")
-            return
-        
+    def visualize_q_values(self):
+        """Visualize Q-values as a heatmap"""
         try:
-            # Create heatmap of Q-values
+            if not self.q_values_history:
+                st.warning("No Q-values available yet. Please run the optimization first.")
+                return
+                
+            # Convert Q-values history to numpy array
             q_values_array = np.array(self.q_values_history)
             
-            fig = px.imshow(
+            # If we have more than 10 states, take the first 10
+            if len(q_values_array) > 10:
+                q_values_array = q_values_array[:10]
+            # If we have less than 10 states, pad with zeros
+            elif len(q_values_array) < 10:
+                padding = np.zeros((10 - len(q_values_array), self.action_space))
+                q_values_array = np.vstack([q_values_array, padding])
+            
+            # Create figure
+            plt.figure(figsize=(10, 6))
+            
+            # Create heatmap
+            sns.heatmap(
                 q_values_array,
-                title="Q-Values Heatmap",
-                color_continuous_scale="RdBu"
+                annot=True,
+                fmt='.2f',
+                cmap='coolwarm',
+                xticklabels=["A1", "A2", "A3", "A4", "A5"],
+                yticklabels=[f"State {i+1}" for i in range(10)]
             )
             
-            st.plotly_chart(fig)
+            plt.title("Q-Value Heatmap (How RL Model Evaluates Actions)")
+            plt.xlabel("Actions")
+            plt.ylabel("States")
+            
+            # Display in Streamlit
+            st.pyplot(plt)
+            
+            # Add action descriptions
+            st.markdown("### Action Descriptions:")
+            for action_id, description in self.action_map.items():
+                st.markdown(f"- **A{action_id+1}**: {description}")
             
         except Exception as e:
             print(f"Error visualizing Q-values: {str(e)}")

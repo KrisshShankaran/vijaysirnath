@@ -14,24 +14,37 @@ class CTGANModule:
     def fit(self, data):
         """Fit the CTGAN model to the data"""
         try:
+            # Check for null values in the data
+            if data.isnull().any().any():
+                null_cols = data.columns[data.isnull().any()].tolist()
+                st.error(f"CTGAN does not support null values. Please preprocess your data first. Columns with null values: {null_cols}")
+                return False
+                
+            # Check data types
+            for col in data.columns:
+                if data[col].dtype not in ['int64', 'float64', 'object']:
+                    st.warning(f"Column {col} has unsupported data type: {data[col].dtype}. Converting to string.")
+                    data[col] = data[col].astype(str)
+            
+            # Fit the model
             self.model.fit(data)
             self.fitted = True
             return True
         except Exception as e:
-            print(f"Error fitting CTGAN model: {str(e)}")
+            st.error(f"Error fitting CTGAN model: {str(e)}")
             return False
     
     def generate_samples(self, n_samples):
         """Generate synthetic samples"""
         if not self.fitted:
-            print("Model not fitted yet. Please fit the model first.")
+            st.error("Model not fitted yet. Please fit the model first.")
             return None
         
         try:
             synthetic_data = self.model.sample(n_samples)
             return synthetic_data
         except Exception as e:
-            print(f"Error generating synthetic samples: {str(e)}")
+            st.error(f"Error generating synthetic samples: {str(e)}")
             return None
     
     def evaluate_synthetic_data(self, real_data, synthetic_data):
@@ -52,14 +65,14 @@ class CTGANModule:
             
             return similarity_scores
         except Exception as e:
-            print(f"Error evaluating synthetic data: {str(e)}")
+            st.error(f"Error evaluating synthetic data: {str(e)}")
             return None
     
     def visualize_similarity(self):
         """Visualize the similarity between real and synthetic data"""
         try:
             if not hasattr(self, 'similarity_scores'):
-                print("No similarity scores available. Please run evaluate_synthetic_data first.")
+                st.error("No similarity scores available. Please run evaluate_synthetic_data first.")
                 return
             
             # Create a DataFrame for visualization
@@ -77,7 +90,7 @@ class CTGANModule:
             st.dataframe(similarity_df.describe())
             
         except Exception as e:
-            print(f"Error visualizing similarity: {str(e)}")
+            st.error(f"Error visualizing similarity: {str(e)}")
             return
     
     def save_model(self, filepath):

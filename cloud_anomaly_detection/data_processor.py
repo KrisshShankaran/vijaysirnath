@@ -23,12 +23,23 @@ class DataProcessor:
             # Create a copy of input data
             self.processed_data = data.copy()
             
-            # Handle missing values
-            self.processed_data.fillna(method='ffill', inplace=True)
-            self.processed_data.fillna(method='bfill', inplace=True)
+            # Handle missing values - for CTGAN compatibility, we need to ensure no null values
+            # First, identify columns with missing values
+            cols_with_missing = self.processed_data.columns[self.processed_data.isnull().any()].tolist()
+            
+            # For numerical columns, fill with median
+            numerical_cols = self.processed_data.select_dtypes(include=['int64', 'float64']).columns
+            for col in numerical_cols:
+                if col in cols_with_missing:
+                    self.processed_data[col] = self.processed_data[col].fillna(self.processed_data[col].median())
+            
+            # For categorical columns, fill with mode
+            categorical_cols = self.processed_data.select_dtypes(include=['object']).columns
+            for col in categorical_cols:
+                if col in cols_with_missing:
+                    self.processed_data[col] = self.processed_data[col].fillna(self.processed_data[col].mode()[0])
             
             # Convert categorical columns to string type
-            categorical_cols = self.processed_data.select_dtypes(include=['object']).columns
             self.processed_data[categorical_cols] = self.processed_data[categorical_cols].astype(str)
             
             # Encode categorical variables
